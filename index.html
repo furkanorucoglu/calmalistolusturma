@@ -268,7 +268,7 @@ const CFG = {
 const S = { lang: null, genre: null };
 
 const SCOPES_ADMIN   = 'user-top-read user-read-private';
-const SCOPES_VISITOR = 'playlist-modify-public playlist-modify-private';
+const SCOPES_VISITOR = 'playlist-modify-public';
 
 // ─────────────────────────────────────────────────────────────
 // NAVIGATION
@@ -557,7 +557,7 @@ async function handleVisitorToken(token, pending) {
       pl = await spPost(`/me/playlists`, token, {
         name: plName,
         description: `SoundMatch tarafından ${now} oluşturuldu 🎵`,
-        public: false
+        public: true
       });
     } catch(e) {
       throw new Error(`Playlist oluşturulamadı: ${e.message}`);
