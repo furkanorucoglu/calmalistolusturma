@@ -569,6 +569,8 @@ async function handleVisitorToken(token, pending) {
 
     const uris = chosen.map(t => t.uri);
     for (let i = 0; i < uris.length; i += 100) {
+      console.log("PLAYLIST ID:", pl.id);
+      console.log("URIS SAMPLE:", uris.slice(0,3));
       await spPost(`/playlists/${pl.id}/tracks`, token, { uris: uris.slice(i, i+100) });
     }
 
