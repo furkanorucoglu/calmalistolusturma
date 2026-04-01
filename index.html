@@ -552,11 +552,16 @@ async function handleVisitorToken(token, pending) {
     const plName = `${lName[pending.lang]} ${gName[pending.genre]} — SoundMatch`;
     const now    = new Date().toLocaleDateString('tr-TR');
 
-    const pl = await spPost(`/users/${me.id}/playlists`, token, {
-      name: plName,
-      description: `SoundMatch tarafından ${now} oluşturuldu 🎵`,
-      public: false
-    });
+    let pl;
+    try {
+      pl = await spPost(`/me/playlists`, token, {
+        name: plName,
+        description: `SoundMatch tarafından ${now} oluşturuldu 🎵`,
+        public: false
+      });
+    } catch(e) {
+      throw new Error(`Playlist oluşturulamadı: ${e.message}`);
+    }
 
     setLoad('Şarkılar ekleniyor...', `${chosen.length} şarkı yükleniyor`);
 
