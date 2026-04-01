@@ -357,7 +357,9 @@ async function exchangeCode(code) {
     const t = await r.text();
     throw new Error('Token alınamadı: ' + t);
   }
-  return r.json();
+  const data = await r.json();
+  console.log("TOKEN SCOPE:", data.scope);
+  return data;
 }
 
 // ─────────────────────────────────────────────────────────────
