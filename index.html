@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoundMatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080808;--bg2:#111;--bg3:#1a1a1a;
+  --green:#1DB954;--gold:#e8a838;--red:#e84040;
+  --text:#f0f0f0;--muted:#666;--border:#222;
+  --turkce-a:#6b1010;--turkce-b:#c0392b;
+  --yabanci-a:#0d2b4a;--yabanci-b:#1a6091;
+  --pop-a:#4a0f8a;--pop-b:#a835a8;
+  --rap-a:#0d0d1f;--rap-b:#c0304a;
+  --rock-a:#1c1c1c;--rock-b:#d4890a;
+  --genel-a:#082a2a;--genel-b:#1db88a;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:.6;
+}
+.screen{display:none;min-height:100vh;position:relative;z-index:1;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+.screen.active{display:flex}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.vinyl{width:160px;height:160px;border-radius:50%;background:conic-gradient(#181818,#222,#111,#1e1e1e,#111,#222,#181818);box-shadow:0 0 60px rgba(29,185,84,.15),0 0 120px rgba(29,185,84,.05);animation:spin 4s linear infinite;position:relative;margin-bottom:2rem}
+.vinyl::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,#2a2a2a,#111);border:2px solid #333}
+.logo{font-family:'Cormorant Garamond',serif;font-size:3.2rem;font-weight:300;letter-spacing:.12em;background:linear-gradient(135deg,var(--green),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem}
+.tagline{color:var(--muted);font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:2.5rem}
+.btn{display:inline-flex;align-items:center;gap:.6rem;padding:.85rem 2rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:500;cursor:pointer;transition:all .25s;border:none;text-decoration:none}
+.btn-green{background:var(--green);color:#000}
+.btn-green:hover{background:#1ed760;transform:translateY(-2px);box-shadow:0 10px 30px rgba(29,185,84,.3)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:#555;background:rgba(255,255,255,.04)}
+.btn-ghost{background:transparent;color:var(--muted);border:none;font-size:.8rem;cursor:pointer;padding:.5rem 1rem;font-family:'DM Sans',sans-serif}
+.btn-ghost:hover{color:var(--text)}
+.cards-grid{display:grid;gap:1rem;width:100%;max-width:520px;margin-top:1.2rem}
+.two-col{grid-template-columns:1fr 1fr}
+.four-col{grid-template-columns:1fr 1fr}
+.card{border-radius:14px;padding:1.8rem 1.4rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;border:1px solid transparent;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end}
+.card::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.05);opacity:0;transition:.25s}
+.card:hover::after{opacity:1}
+.card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.2);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.card:active{transform:scale(.97)}
+.card-turkce{background:linear-gradient(135deg,var(--turkce-a),var(--turkce-b))}
+.card-yabanci{background:linear-gradient(135deg,var(--yabanci-a),var(--yabanci-b))}
+.card-pop{background:linear-gradient(135deg,var(--pop-a),var(--pop-b))}
+.card-rap{background:linear-gradient(135deg,var(--rap-a),var(--rap-b))}
+.card-rock{background:linear-gradient(135deg,var(--rock-a),var(--rock-b))}
+.card-genel{background:linear-gradient(135deg,var(--genel-a),var(--genel-b))}
+.card-emoji{font-size:2rem;margin-bottom:.7rem;display:block}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600}
+.card-sub{font-size:.72rem;opacity:.65;margin-top:.25rem;letter-spacing:.04em}
+.steps{display:flex;gap:.5rem;margin-bottom:1.8rem}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:.3s}
+.dot.active{background:var(--green);width:22px;border-radius:3px}
+.dot.done{background:var(--green)}
+.screen-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;text-align:center;margin-bottom:.4rem}
+.screen-sub{color:var(--muted);font-size:.88rem;text-align:center;margin-bottom:.8rem;line-height:1.6;max-width:380px}
+.badge{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .9rem;border-radius:20px;background:var(--bg3);font-size:.78rem;color:var(--muted);margin-bottom:1.2rem;border:1px solid var(--border)}
+.badge b{color:var(--text);font-weight:500}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:2.2rem;max-width:460px;width:100%;animation:fadeUp .4s ease both}
+.panel h2{font-family:'Cormorant Garamond',serif;font-size:1.7rem;margin-bottom:.4rem}
+.panel p{color:var(--muted);font-size:.88rem;line-height:1.7;margin-bottom:1.2rem}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.field input{width:100%;padding:.75rem 1rem;background:var(--bg3);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.92rem;outline:none;transition:.2s}
+.field input:focus{border-color:var(--green)}
+.field input::placeholder{color:var(--muted)}
+.step-list{list-style:none;counter-reset:s}
+.step-list li{counter-increment:s;position:relative;padding:.6rem .6rem .6rem 2.4rem;font-size:.84rem;color:var(--muted);line-height:1.55}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:.55rem;width:18px;height:18px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);font-size:.7rem;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.step-list a{color:var(--green);text-decoration:none}
+.step-list a:hover{text-decoration:underline}
+.step-list code{background:var(--bg3);border:1px solid var(--border);padding:.12rem .35rem;border-radius:4px;font-size:.78rem;color:var(--gold);font-family:monospace;word-break:break-all}
+.alert{padding:.75rem 1rem;border-radius:8px;font-size:.83rem;margin:.5rem 0;border-left:3px solid;line-height:1.5}
+.alert-error{background:rgba(232,64,64,.1);border-color:var(--red);color:#ff8888}
+.alert-success{background:rgba(29,185,84,.1);border-color:var(--green);color:#88e8a8}
+.alert-info{background:rgba(232,168,56,.1);border-color:var(--gold);color:#f0c878}
+.loading-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;text-align:center;animation:pulse 1.4s ease infinite}
+.loading-sub{color:var(--muted);font-size:.85rem;text-align:center;margin-top:.4rem}
+.prog-wrap{margin:.5rem 0}
+.prog-label{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:.3rem}
+.prog-bar{background:var(--bg3);border-radius:3px;height:5px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .6s ease;width:0%}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:.8rem 0}
+.stat{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.9rem;text-align:center}
+.stat-n{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;color:var(--green)}
+.stat-l{font-size:.72rem;color:var(--muted);margin-top:.15rem}
+.big-emoji{font-size:4.5rem;margin-bottom:.8rem;animation:fadeUp .4s ease}
+.playlist-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem;max-width:380px;width:100%;display:flex;align-items:center;gap:1rem;margin:.8rem 0 1.5rem}
+.pl-thumb{width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+.pl-name{font-weight:500;font-size:.95rem}
+.pl-count{color:var(--muted);font-size:.78rem;margin-top:.2rem}
+.back{position:absolute;top:1.4rem;left:1.4rem;background:var(--bg2);border:1px solid var(--border);border-radius:50px;padding:.45rem .9rem;font-size:.82rem;color:var(--muted);cursor:pointer;transition:.2s;z-index:10}
+.back:hover{color:var(--text);border-color:#444}
+.sp{display:inline-block;width:17px;height:17px;vertical-align:middle}
+.oauth-hint{color:var(--muted);font-size:.78rem;text-align:center;margin-top:.8rem;line-height:1.5}
+@media(max-width:480px){
+  .logo{font-size:2.4rem}
+  .two-col,.four-col{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen active" id="s-home">
+  <div class="vinyl"></div>
+  <div class="logo">SoundMatch</div>
+  <div class="tagline">Sana özel çalma listesi</div>
+  <div class="steps"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+  <div class="screen-title">Hangi dili seversin?</div>
+  <div class="screen-sub">Müzik tercihini seç, Spotify hesabına playlist oluşturalım</div>
+  <div class="cards-grid two-col">
+    <div class="card card-turkce" onclick="pick('lang','turkce')">
+      <span class="card-emoji">🇹🇷</span>
+      <span class="card-title">Türkçe</span>
+      <span class="card-sub">Yerli sanatçılar</span>
+    </div>
+    <div class="card card-yabanci" onclick="pick('lang','yabanci')">
+      <span class="card-emoji">🌍</span>
+      <span class="card-title">Yabancı</span>
+      <span class="card-sub">International artists</span>
+    </div>
+  </div>
+</div>
+
+<!-- GENRE -->
+<div class="screen" id="s-genre">
+  <button class="back" onclick="go('home')">← Geri</button>
+  <div class="steps"><div class="dot done"></div><div class="dot active"></div><div class="dot"></div></div>
+  <div class="screen-title">Tür seç</div>
+  <div class="badge" id="lang-badge">🇹🇷 <b>Türkçe</b></div>
+  <div class="cards-grid four-col">
+    <div class="card card-pop"  onclick="pick('genre','pop')"><span class="card-emoji">✨</span><span class="card-title">Pop</span><span class="card-sub">Hits & vibes</span></div>
+    <div class="card card-rap"  onclick="pick('genre','rap')"><span class="card-emoji">🎤</span><span class="card-title">Rap</span><span class="card-sub">Hip-hop & trap</span></div>
+    <div class="card card-rock" onclick="pick('genre','rock')"><span class="card-emoji">🎸</span><span class="card-title">Rock</span><span class="card-sub">Rock & metal</span></div>
+    <div class="card card-genel" onclick="pick('genre','genel')"><span class="card-emoji">🎶</span><span class="card-title">Genel</span><span class="card-sub">Karışık mix</span></div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="screen" id="s-confirm">
+  <button class="back" onclick="go('genre')">← Geri</button>
+  <div class="steps"><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div></div>
+  <div style="font-size:3.5rem;margin-bottom:1rem">🎵</div>
+  <div class="screen-title">Hazır mısın?</div>
+  <p class="screen-sub" id="confirm-desc">Spotify hesabına bağlanarak çalma listeni oluşturalım</p>
+  <button class="btn btn-green" onclick="startVisitorAuth()">
+    <svg class="sp" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+    Spotify ile Bağlan
+  </button>
+  <div id="confirm-err"></div>
+  <p class="oauth-hint">Spotify giriş sayfasına yönlendirileceksin.</p>
+</div>
+
+<!-- LOADING -->
+<div class="screen" id="s-loading">
+  <div class="vinyl"></div>
+  <div class="loading-title" id="load-title">Hazırlanıyor...</div>
+  <div class="loading-sub" id="load-sub">Lütfen bekle</div>
+</div>
+
+<!-- SUCCESS -->
+<div class="screen" id="s-success">
+  <div class="big-emoji">🎉</div>
+  <div class="screen-title">Playlist hazır!</div>
+  <p class="screen-sub" id="success-msg">Playlist hesabına eklendi.</p>
+  <div class="playlist-card">
+    <div class="pl-thumb" id="pl-thumb">🎵</div>
+    <div>
+      <div class="pl-name" id="pl-name">—</div>
+      <div class="pl-count" id="pl-count">—</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center">
+    <a class="btn btn-green" id="open-sp" href="#" target="_blank">Spotify'da Aç</a>
+    <button class="btn btn-outline" onclick="resetHome()">Yeni Liste →</button>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="screen" id="s-error">
+  <div style="font-size:3rem;margin-bottom:1rem">😕</div>
+  <div class="screen-title">Bir sorun oluştu</div>
+  <p class="screen-sub" id="err-msg">—</p>
+  <button class="btn btn-outline" onclick="resetHome()" style="margin-top:1rem">Ana Sayfaya Dön</button>
+</div>
+
+<!-- NO DATA -->
+<div class="screen" id="s-nodata">
+  <div class="panel" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:1rem">🎛️</div>
+    <h2>Müzik kütüphanesi yüklenmedi</h2>
+    <p style="margin-bottom:1.5rem">Admin henüz Spotify dinleme geçmişini yüklememiş.</p>
+    <button class="btn btn-green" onclick="go('admin')" style="width:100%;margin-bottom:.8rem">
+      🎛️ Admin Girişi Yap
+    </button>
+    <button class="btn btn-ghost" onclick="location.reload()">🔄 Yenile</button>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="s-setup">
+  <div class="panel">
+    <h2>⚙️ İlk Kurulum</h2>
+    <p>SoundMatch için Spotify Developer hesabı gerekli. Aşağıdaki adımları takip et:</p>
+    <ol class="step-list">
+      <li><a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> → <strong>Create App</strong></li>
+      <li>App Name: <code>SoundMatch</code></li>
+      <li>Redirect URI olarak şunu ekle: <code id="redir-uri">yükleniyor...</code></li>
+      <li>APIs: <strong>Web API</strong> → Save</li>
+      <li>Settings → <strong>Client ID</strong> ve <strong>Client Secret</strong>'ı kopyala</li>
+    </ol>
+    <div class="field" style="margin-top:1.2rem">
+      <label>Spotify Client ID</label>
+      <input type="text" id="cid-input" placeholder="Buraya yapıştır...">
+    </div>
+    <div class="field">
+      <label>Spotify Client Secret</label>
+      <input type="password" id="csecret-input" placeholder="View client secret → kopyala">
+    </div>
+    <button class="btn btn-green" onclick="saveSetup()" style="width:100%">Kaydet ve Devam Et →</button>
+    <div id="setup-err"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="screen" id="s-admin">
+  <div class="panel" style="max-width:540px">
+    <h2>🎛️ Admin Paneli</h2>
+    <p id="admin-sub">Spotify ile giriş yaparak dinleme geçmişini yükle. Bu işlem sadece bir kez yapılmalı.</p>
+    <div id="admin-body">
+      <button class="btn btn-green" onclick="startAdminAuth()" id="admin-login-btn" style="width:100%">
+        <svg class="sp" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Spotify ile Giriş Yap (Admin)
+      </button>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="go('setup')">⚙️ Ayarları Değiştir</button>
+      <button class="btn btn-ghost" onclick="go('home')">🏠 Siteyi Gör</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// CONFIG — localStorage'dan okunur, setup ekranından yazılır
+// ─────────────────────────────────────────────────────────────
+const CFG = {
+  get clientId()     { return localStorage.getItem('sm_client_id') || ''; },
+  get clientSecret() { return localStorage.getItem('sm_client_secret') || ''; },
+  set clientId(v)    { localStorage.setItem('sm_client_id', v); },
+  set clientSecret(v){ localStorage.setItem('sm_client_secret', v); },
+};
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+const S = { lang: null, genre: null };
+
+const SCOPES_ADMIN   = 'user-top-read user-read-private';
+const SCOPES_VISITOR = 'playlist-modify-public playlist-modify-private';
+
+// ─────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+}
+
+function pick(key, val) {
+  S[key] = val;
+  if (key === 'lang') {
+    document.getElementById('lang-badge').innerHTML =
+      val === 'turkce' ? '🇹🇷 <b>Türkçe</b>' : '🌍 <b>Yabancı</b>';
+    go('genre');
+  } else {
+    const gNames = { pop:'Pop', rap:'Rap', rock:'Rock', genel:'Karışık Mix' };
+    const lNames = { turkce:'Türkçe 🇹🇷', yabanci:'Yabancı 🌍' };
+    document.getElementById('confirm-desc').textContent =
+      `${lNames[S.lang]} / ${gNames[val]} çalma listesi oluşturulacak`;
+    go('confirm');
+  }
+}
+
+function resetHome() { S.lang = null; S.genre = null; go('home'); }
+
+// ─────────────────────────────────────────────────────────────
+// REDIRECT URI — GitHub Pages URL'i
+// ─────────────────────────────────────────────────────────────
+function getRedirectUri() {
+  return window.location.origin + window.location.pathname.replace(/\/$/, '');
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH — Authorization Code Flow (PKCE olmadan, secret frontend'de)
+// ─────────────────────────────────────────────────────────────
+function buildAuthUrl(scopes, stateTag) {
+  const p = new URLSearchParams({
+    client_id:     CFG.clientId,
+    response_type: 'code',
+    redirect_uri:  getRedirectUri(),
+    scope:         scopes,
+    state:         stateTag,
+    show_dialog:   'true'
+  });
+  return 'https://accounts.spotify.com/authorize?' + p.toString();
+}
+
+function startAdminAuth() {
+  if (!CFG.clientId) { go('setup'); return; }
+  localStorage.setItem('sm_pending', JSON.stringify({ mode: 'admin' }));
+  window.location.href = buildAuthUrl(SCOPES_ADMIN, 'admin');
+}
+
+function startVisitorAuth() {
+  const tracks = loadTracksLocal();
+  if (!tracks || tracks.length === 0) {
+    document.getElementById('confirm-err').innerHTML =
+      '<div class="alert alert-error" style="margin-top:.8rem">Müzik kütüphanesi henüz yüklenmemiş. Admin girişi yapılmalı.</div>';
+    return;
+  }
+  if (!CFG.clientId) { go('setup'); return; }
+  localStorage.setItem('sm_pending', JSON.stringify({ mode: 'visitor', lang: S.lang, genre: S.genre }));
+  window.location.href = buildAuthUrl(SCOPES_VISITOR, 'visitor');
+}
+
+// ─────────────────────────────────────────────────────────────
+// TOKEN EXCHANGE — doğrudan Spotify'a istek (client_secret frontend'de)
+// ─────────────────────────────────────────────────────────────
+async function exchangeCode(code) {
+  const body = new URLSearchParams({
+    grant_type:   'authorization_code',
+    code:         code,
+    redirect_uri: getRedirectUri(),
+    client_id:    CFG.clientId,
+    client_secret:CFG.clientSecret
+  });
+
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString()
+  });
+
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error('Token alınamadı: ' + t);
+  }
+  return r.json();
+}
+
+// ─────────────────────────────────────────────────────────────
+// SETUP
+// ─────────────────────────────────────────────────────────────
+function saveSetup() {
+  const cid     = document.getElementById('cid-input').value.trim();
+  const csecret = document.getElementById('csecret-input').value.trim();
+  if (!cid || cid.length < 20) {
+    document.getElementById('setup-err').innerHTML =
+      '<div class="alert alert-error" style="margin-top:.6rem">Geçerli bir Client ID gir</div>';
+    return;
+  }
+  if (!csecret || csecret.length < 20) {
+    document.getElementById('setup-err').innerHTML =
+      '<div class="alert alert-error" style="margin-top:.6rem">Geçerli bir Client Secret gir</div>';
+    return;
+  }
+  CFG.clientId     = cid;
+  CFG.clientSecret = csecret;
+  document.getElementById('setup-err').innerHTML =
+    '<div class="alert alert-success" style="margin-top:.6rem">✅ Kaydedildi!</div>';
+  setTimeout(() => go('admin'), 800);
+}
+
+// ─────────────────────────────────────────────────────────────
+// LOCAL STORAGE — track kütüphanesi
+// ─────────────────────────────────────────────────────────────
+function saveTracksLocal(tracks) {
+  // localStorage 5MB limitini aşmamak için gerekli alanları sakla
+  const slim = tracks.map(t => ({
+    id: t.id, uri: t.uri, name: t.name,
+    artists: t.artists, turkish: t.turkish, genre: t.genre
+  }));
+  try {
+    localStorage.setItem('sm_tracks', JSON.stringify(slim));
+    return slim.length;
+  } catch(e) {
+    // 5MB doluysa eski şarkıları at
+    const half = slim.slice(0, Math.floor(slim.length / 2));
+    localStorage.setItem('sm_tracks', JSON.stringify(half));
+    return half.length;
+  }
+}
+
+function loadTracksLocal() {
+  const raw = localStorage.getItem('sm_tracks');
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// ─────────────────────────────────────────────────────────────
+// SPOTIFY API HELPERS
+// ─────────────────────────────────────────────────────────────
+async function spGet(path, token) {
+  const r = await fetch('https://api.spotify.com/v1' + path, {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(`Spotify ${r.status}: ${t}`); }
+  return r.json();
+}
+
+async function spPost(path, token, body) {
+  const r = await fetch('https://api.spotify.com/v1' + path, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(`Spotify ${r.status}: ${t}`); }
+  return r.json();
+}
+
+// ─────────────────────────────────────────────────────────────
+// GENRE / LANGUAGE DETECTION
+// ─────────────────────────────────────────────────────────────
+function isTurkish(genres) {
+  return genres.some(g => /turk|türk|anatolian/i.test(g));
+}
+function trackGenre(genres) {
+  const j = genres.join(' ').toLowerCase();
+  if (/\brap\b|hip.?hop|trap/.test(j))  return 'rap';
+  if (/\brock\b|metal|alternative|punk|grunge/.test(j)) return 'rock';
+  if (/\bpop\b/.test(j)) return 'pop';
+  return 'genel';
+}
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN FLOW
+// ─────────────────────────────────────────────────────────────
+async function handleAdminToken(token) {
+  go('admin');
+  const body = document.getElementById('admin-body');
+  body.innerHTML = '<div class="alert alert-info">📡 Spotify hesabın okunuyor...</div>';
+
+  try {
+    const me = await spGet('/me', token);
+    document.getElementById('admin-sub').textContent = `Giriş yapıldı: ${me.display_name || me.id}`;
+
+    body.innerHTML = `
+      <div class="alert alert-info" style="margin-bottom:.8rem">Dinleme geçmişin çekiliyor...</div>
+      ${['short_term','medium_term','long_term'].map((r,i) => `
+        <div class="prog-wrap">
+          <div class="prog-label"><span>${['Son 4 hafta','Son 6 ay','Tüm zamanlar'][i]}</span><span id="pn${i}">—</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="pf${i}"></div></div>
+        </div>`).join('')}`;
+
+    const allTracks = new Map();
+    for (const [i, range] of ['short_term','medium_term','long_term'].entries()) {
+      try {
+        const d = await spGet(`/me/top/tracks?limit=50&time_range=${range}`, token);
+        (d.items || []).forEach(t => { if (!allTracks.has(t.id)) allTracks.set(t.id, t); });
+        document.getElementById('pf' + i).style.width = '100%';
+        document.getElementById('pn' + i).textContent = (d.items || []).length + ' şarkı';
+      } catch { document.getElementById('pn' + i).textContent = 'hata'; }
+    }
+
+    const tracks = Array.from(allTracks.values());
+    body.innerHTML += `<div class="alert alert-info" style="margin-top:.8rem">🎨 ${tracks.length} şarkı bulundu, türler analiz ediliyor...</div>`;
+
+    const artistIds = [...new Set(tracks.flatMap(t => t.artists.map(a => a.id)))];
+    const genreMap = new Map();
+    for (let i = 0; i < artistIds.length; i += 50) {
+      try {
+        const d = await spGet('/artists?ids=' + artistIds.slice(i, i+50).join(','), token);
+        (d.artists || []).forEach(a => { if (a) genreMap.set(a.id, a.genres || []); });
+      } catch {}
+    }
+
+    const categorized = tracks.map(t => {
+      const g = t.artists.flatMap(a => genreMap.get(a.id) || []);
+      return {
+        id: t.id, uri: t.uri, name: t.name,
+        artists: t.artists.map(a => a.name),
+        turkish: isTurkish(g), genre: trackGenre(g)
+      };
+    });
+
+    body.innerHTML += `<div class="alert alert-info" style="margin-top:.8rem">💾 Kaydediliyor...</div>`;
+
+    const saved = saveTracksLocal(categorized);
+    const tr   = categorized.filter(t => t.turkish).length;
+    const fo   = categorized.length - tr;
+    const pop  = categorized.filter(t => t.genre === 'pop').length;
+    const rap  = categorized.filter(t => t.genre === 'rap').length;
+    const rock = categorized.filter(t => t.genre === 'rock').length;
+
+    body.innerHTML = `
+      <div class="alert alert-success">✅ ${saved} şarkı kaydedildi! Ziyaretçiler artık kullanabilir.</div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-n">${tr}</div><div class="stat-l">🇹🇷 Türkçe</div></div>
+        <div class="stat"><div class="stat-n">${fo}</div><div class="stat-l">🌍 Yabancı</div></div>
+        <div class="stat"><div class="stat-n">${saved}</div><div class="stat-l">🎵 Toplam</div></div>
+        <div class="stat"><div class="stat-n">${pop}</div><div class="stat-l">✨ Pop</div></div>
+        <div class="stat"><div class="stat-n">${rap}</div><div class="stat-l">🎤 Rap</div></div>
+        <div class="stat"><div class="stat-n">${rock}</div><div class="stat-l">🎸 Rock</div></div>
+      </div>
+      <div class="alert alert-info" style="margin-top:.5rem">Kütüphane hazır! Ziyaretçiler kullanabilir.</div>
+      <button class="btn btn-green" onclick="startAdminAuth()" style="margin-top:1rem;width:100%">🔄 Yeniden Yükle</button>
+    `;
+
+  } catch(err) {
+    body.innerHTML = `<div class="alert alert-error">❌ Hata: ${err.message}</div>`;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// VISITOR FLOW
+// ─────────────────────────────────────────────────────────────
+async function handleVisitorToken(token, pending) {
+  go('loading');
+  try {
+    setLoad('Şarkılar filtreleniyor...', 'Lütfen bekle');
+
+    const tracks = loadTracksLocal() || [];
+    let pool = tracks.filter(t => {
+      const langOk  = pending.lang === 'turkce' ? t.turkish : !t.turkish;
+      const genreOk = pending.genre === 'genel' || t.genre === pending.genre;
+      return langOk && genreOk;
+    });
+
+    if (pool.length === 0) pool = tracks.filter(t => pending.lang === 'turkce' ? t.turkish : !t.turkish);
+    if (pool.length === 0) pool = tracks;
+
+    const chosen = pool.sort(() => Math.random() - .5).slice(0, 30);
+
+    setLoad('Playlist oluşturuluyor...', 'Spotify hesabın güncelleniyor');
+
+    const me = await spGet('/me', token);
+    const gEmoji = { pop:'✨', rap:'🎤', rock:'🎸', genel:'🎶' };
+    const gName  = { pop:'Pop', rap:'Rap', rock:'Rock', genel:'Mix' };
+    const lName  = { turkce:'🇹🇷 TR', yabanci:'🌍 INT' };
+    const plName = `${lName[pending.lang]} ${gName[pending.genre]} — SoundMatch`;
+    const now    = new Date().toLocaleDateString('tr-TR');
+
+    const pl = await spPost(`/users/${me.id}/playlists`, token, {
+      name: plName,
+      description: `SoundMatch tarafından ${now} oluşturuldu 🎵`,
+      public: false
+    });
+
+    setLoad('Şarkılar ekleniyor...', `${chosen.length} şarkı yükleniyor`);
+
+    const uris = chosen.map(t => t.uri);
+    for (let i = 0; i < uris.length; i += 100) {
+      await spPost(`/playlists/${pl.id}/tracks`, token, { uris: uris.slice(i, i+100) });
+    }
+
+    document.getElementById('pl-name').textContent  = plName;
+    document.getElementById('pl-count').textContent = chosen.length + ' şarkı';
+    document.getElementById('pl-thumb').textContent = gEmoji[pending.genre] || '🎵';
+    document.getElementById('open-sp').href         = pl.external_urls.spotify;
+    document.getElementById('success-msg').textContent = `"${plName}" playlist'i hesabına eklendi!`;
+    go('success');
+
+  } catch(err) {
+    document.getElementById('err-msg').textContent = err.message;
+    go('error');
+  }
+}
+
+function setLoad(title, sub) {
+  document.getElementById('load-title').textContent = title;
+  document.getElementById('load-sub').textContent   = sub;
+}
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+async function init() {
+  // Spotify callback: ?code=...&state=...
+  const urlParams = new URLSearchParams(window.location.search);
+  const code  = urlParams.get('code');
+  const state = urlParams.get('state');
+  const err   = urlParams.get('error');
+
+  if (err) {
+    document.getElementById('err-msg').textContent = 'Spotify girişi iptal edildi: ' + err;
+    go('error');
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  if (code && state) {
+    const pending = JSON.parse(localStorage.getItem('sm_pending') || '{}');
+    localStorage.removeItem('sm_pending');
+    window.history.replaceState({}, '', window.location.pathname);
+
+    go('loading');
+    setLoad('Kimlik doğrulanıyor...', 'Lütfen bekle');
+
+    try {
+      const tokenData = await exchangeCode(code);
+      if (tokenData.error) throw new Error(tokenData.error_description || tokenData.error);
+      const token = tokenData.access_token;
+
+      if (state === 'admin') {
+        await handleAdminToken(token);
+      } else if (state === 'visitor') {
+        await handleVisitorToken(token, pending);
+      }
+    } catch(e) {
+      document.getElementById('err-msg').textContent = e.message;
+      go('error');
+    }
+    return;
+  }
+
+  // Admin panel: ?admin
+  if (urlParams.has('admin')) {
+    if (!CFG.clientId || !CFG.clientSecret) {
+      document.getElementById('redir-uri').textContent = getRedirectUri();
+      go('setup');
+    } else {
+      go('admin');
+    }
+    return;
+  }
+
+  // Normal visitor
+  if (!CFG.clientId || !CFG.clientSecret) {
+    document.getElementById('redir-uri').textContent = getRedirectUri();
+    go('setup');
+    return;
+  }
+
+  const tracks = loadTracksLocal();
+  if (!tracks || tracks.length === 0) {
+    go('nodata');
+    return;
+  }
+
+  go('home');
+}
+
+init();
+</script>
+</body>
+</html>
